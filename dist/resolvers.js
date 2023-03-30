@@ -1,3 +1,4 @@
+import { prisma } from "./db";
 const books = [
     {
         id: 1,
@@ -12,25 +13,32 @@ const books = [
 ];
 export const resolvers = {
     Query: {
-        books: () => books,
+        books: () => prisma.book.findMany(),
         book: (_, { data }) => {
             const { id } = data;
-            return books.find((book) => book.id === id);
+            return prisma.book.findFirst({
+                where: {
+                    id: Number(id),
+                },
+            });
         },
     },
     Mutation: {
-        addnewBook: (_, { data }) => {
+        addnewBook: async (_, { data }) => {
             const { title, author } = data;
-            const id = books.length + 1;
-            const newBook = { id, title, author };
-            books.push(newBook);
+            const newBook = await prisma.book.create({
+                data: { title, author },
+            });
             return newBook;
         },
-        updateBook: (_, { id, data }) => {
+        updateBook: async (_, { id, data }) => {
             const { title, author } = data;
-            const updateBook = books.find((book) => book.id === id);
-            updateBook.title = title;
-            updateBook.author = author;
+            const updateBook = await prisma.book.update({
+                where: {
+                    id,
+                },
+                data: { title, author },
+            });
             return updateBook;
         },
     },
